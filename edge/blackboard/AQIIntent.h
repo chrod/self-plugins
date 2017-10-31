@@ -16,46 +16,48 @@
 */
 
 
-#ifndef WDC_AQIDATA_H
-#define WDC_AQIDATA_H
+#ifndef SELF_AQIINTENT_H
+#define SELF_AQIINTENT_H
 
-#include "services/IAQI.h"
-#include "services/ILocation.h"
+#include "blackboard/IIntent.h"
+#include "SelfInstance.h"
 
-class AQIData : public IAQI
+class SELF_API AQIIntent : public IIntent
 {
 public:
     RTTI_DECL();
 
-    //! Types
-    typedef Delegate<const Json::Value &>			SendCallback;
-
-    //! Construction
-    AQIData();
+	//! Types
+	typedef boost::shared_ptr<AQIIntent>		SP;
+	typedef boost::weak_ptr<AQIIntent>			WP;
 
     //! ISerializable interface
     virtual void Serialize(Json::Value & json);
     virtual void Deserialize(const Json::Value & json);
 
-    //! IService interface
-    virtual bool Start();
+    //! IIntent interface
+    virtual void Create(const Json::Value & a_Intent, const Json::Value & a_Parse);
 
-	//! IWeather interface
-    void GetCurrentConditions( Location * a_Location, SendCallback a_Callback );
-    //void GetHourlyForecast( Location * a_Location, SendCallback a_Callback );
-    //void GetTenDayForecast( Location * a_Location, SendCallback a_Callback );
+	const std::string & GetLocation() const
+	{
+		return m_Location;
+	}
+
+	void SetLocation(const std::string & a_Location)
+	{
+		m_Location = a_Location;
+	}
+
+	const std::string & GetDate() const
+	{
+		return m_Date;
+	}
 
 private:
-	//! Static
-	bool VerifyLocation( Location ** a_Location);
-
 	//! Data
-    std::string m_Units;
-    std::string m_Language;
-
 	std::string m_Location;
-	float		m_Long;
-	float		m_Lat;
+	std::string m_Date;
+	Json::Value m_Parse;
 };
 
-#endif
+#endif //SELF_AQIINTENT_H

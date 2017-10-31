@@ -36,7 +36,6 @@ AQIData::AQIData() :
 
 void AQIData::Serialize(Json::Value & json)
 {
-	Log::Status("AQIData", "Serialize()");
 	IAQI::Serialize(json);
 
 	json["m_Units"] = m_Units;
@@ -44,12 +43,10 @@ void AQIData::Serialize(Json::Value & json)
 	json["m_Location"] = m_Location;
 	json["m_Long"] = m_Long;
 	json["m_Lat"] = m_Lat;
-	Log::Status("AQIData", "Serialize()-done");
 }
 
 void AQIData::Deserialize(const Json::Value & json)
 {
-	Log::Status("AQIData", "DeSerialize()");
 	IAQI::Deserialize(json);
 
 	if (json["m_Units"].isString() )
@@ -62,77 +59,43 @@ void AQIData::Deserialize(const Json::Value & json)
 		m_Long = json["m_Long"].asFloat();
 	if (json["m_Lat"].isNumeric() )
 		m_Lat = json["m_Lat"].asFloat();
-	Log::Status("AQIData", "DeSerialize()-done");
 }
 
 bool AQIData::Start()
 {
-	Log::Status("AQIData", "Starting AQIData!");
 	if (!IAQI::Start())
 		return false;
-
+	/* Replace this with error checking - ping the sensor to see if it's up
 	if (!StringUtil::EndsWith(m_pConfig->m_URL, "/posts"))
 	{
 		Log::Error("AQIData", "Configured URL not ended with /posts");
 		return false;
 	}
+	*/
 
 	if (Config::Instance()->FindService<ILocation>() == NULL)
 		//Config::Instance()->GetService<AQILocation>();
 		Config::Instance()->GetService<ILocation>();
-
 	return true;
 }
 
 void AQIData::GetCurrentConditions(Location * a_Location, SendCallback a_Callback)
-{
-	VerifyLocation(&a_Location);
+{	
+	// Get current reading from PurpleAir sensor (JSON payload expected)
+	/* Example: {"SensorId":"18:fe:34:dd:b9:8","DateTime":"2017/10/31T15:59:42z","Geo":"AirMonitor_b98",
+	  "Mem":29624,"Id":10,"Adc":0.00,"lat":33.063023,"lon":-117.246445,"elevation":74.40,"version":"2.49j",
+	  "uptime":54,"rssi":-33,"hardwareversion":"2.0","hardwarediscovered":"2.0+PMSX003A+BME280","current_temp_f":77,
+	  "current_humidity":50,"current_dewpoint_f":56.94,"pressure":1006.31,"pm1_0_atm":42.00,"pm2_5_atm":42.25,
+	  "pm10_0_atm":42.25,"pm1_0_cf_1":36.75,"pm2_5_cf_1":41.50,"pm10_0_cf_1":42.25,
+	  "p_0_3_um":0.00,"p_0_5_um":0.00,"p_1_0_um":0.00,"p_2_5_um":0.00,"p_5_0_um":0.00,"p_10_0_um":0.00}*/
 
-	/*std::string parameters = "/v1";
-	parameters += "/geocode/" + StringUtil::Format("%f", a_Location->GetLatitude()) + "/"
-				  + StringUtil::Format("%f", a_Location->GetLongitude());
-	parameters += "/forecast/hourly/48hour.json";
-	parameters += "?units=" + m_Units;
-	parameters += "&language=" + m_Language;*/
-
-    std::string parameters = "/1";
-
+    std::string parameters = "/json";
 	new RequestJson(this, parameters, "GET", m_Headers, EMPTY_STRING, a_Callback);
 }
 
-/*void AQIData::GetHourlyForecast(Location * a_Location, SendCallback a_Callback)
-{
-	VerifyLocation(&a_Location);
-
-	std::string parameters = "/v1";
-	parameters += "/geocode/" + StringUtil::Format("%f", a_Location->GetLatitude()) + "/"
-				  + StringUtil::Format("%f", a_Location->GetLongitude());
-	parameters += "/forecast/hourly/24hour.json";
-	parameters += "?units=" + m_Units;
-	parameters += "&language=" + m_Language;
-
-	new RequestJson(this, parameters, "GET", m_Headers, EMPTY_STRING, a_Callback);
-}
-*/
-/*void AQIData::GetTenDayForecast(Location * a_Location, SendCallback a_Callback)
-{
-	VerifyLocation(&a_Location);
-
-	std::string parameters = "/v1";
-	parameters += "/geocode/" + StringUtil::Format("%f", a_Location->GetLatitude()) + "/"
-				  + StringUtil::Format("%f", a_Location->GetLongitude());
-	parameters += "/forecast/daily/10day.json";
-	parameters += "?units=" + m_Units;
-	parameters += "&language=" + m_Language;
-
-	new RequestJson(this, parameters, "GET", m_Headers, EMPTY_STRING, a_Callback);
-}
-*/
 bool AQIData::VerifyLocation(Location ** a_Location)
 {
-	Log::Status("AQIData", "VerifyLocation()");
 	if ( *a_Location == NULL )
 		*a_Location = new Location( m_Location, m_Lat, m_Long );
 	return true;
 }
-
